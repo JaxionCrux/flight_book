@@ -19,6 +19,7 @@ export function FlightSearchForm() {
   const isMobile = useMediaQuery("(max-width: 768px)")
   const isSmallMobile = useMediaQuery("(max-width: 375px)")
   const isTinyMobile = useMediaQuery("(max-width: 320px)")
+  const isExtremelySmallMobile = useMediaQuery("(max-width: 280px)")
   const [tripType, setTripType] = useState("return")
   const [originCity, setOriginCity] = useState("Orlando")
   const [originCode, setOriginCode] = useState("MCO")
@@ -75,12 +76,19 @@ export function FlightSearchForm() {
   const formatPassengersText = () => {
     // For the smallest screens, show only the essential information
     if (isTinyMobile) {
-      return `1 Adult`
+      return `${adults} Adult${adults > 1 ? "s" : ""}`
     }
     // For small screens, use very short abbreviations
     else if (isSmallMobile) {
-      // Match exactly what's in the screenshot: "1 Adult, Economy"
-      return `1 Adult, Economy`
+      const cabinShort =
+        cabinClass === "economy"
+          ? "Eco"
+          : cabinClass === "premium_economy"
+            ? "P.Eco"
+            : cabinClass === "business"
+              ? "Bus"
+              : "First"
+      return `${adults} Adult${adults > 1 ? "s" : ""}, ${cabinShort}`
     }
     // For regular mobile screens
     else {
@@ -196,30 +204,37 @@ export function FlightSearchForm() {
 
   const handleMultiCityDateSelect = (flightId: number, date: Date | undefined) => {
     if (date) {
-      setMultiCityFlights((prev) => prev.map((flight) => (flight.id === flightId ? { ...flight, date } : flight)))
+      setMultiCityFlights((prev) =>
+        prev.map((flightItem) => (flightItem.id === flightId ? { ...flightItem, date } : flightItem)),
+      )
       setMultiCityDatePickerOpen((prev) => ({ ...prev, [flightId]: false }))
     }
   }
 
   const formatDateRange = () => {
     if (tripType === "one_way") {
-      return format(startDate, "EEE, d MMM")
+      return format(startDate, isTinyMobile ? "d MMM" : "EEE, d MMM")
     }
 
     // Make sure endDate is defined before formatting it
     if (!endDate) {
       // If endDate is undefined, just show the start date
-      return format(startDate, "d MMM")
+      return format(startDate, isTinyMobile ? "d MMM" : "EEE, d MMM")
+    }
+
+    if (isTinyMobile) {
+      return `${format(startDate, "d MMM")}-${format(endDate, "d MMM")}`
     }
 
     if (isMobile) {
       return `${format(startDate, "d MMM")} - ${format(endDate, "d MMM")}`
     }
+
     return `${format(startDate, "d MMM")} - ${format(endDate, "d MMM")}`
   }
 
   const formatMultiCityDate = (date: Date) => {
-    return format(date, "EEE, d MMM")
+    return format(date, isTinyMobile ? "d MMM" : "EEE, d MMM")
   }
 
   // Truncate city names for very small screens
@@ -227,15 +242,15 @@ export function FlightSearchForm() {
     if (!city) return ""
 
     // For tiny screens, be more aggressive with truncation
-    if (isTinyMobile && city.length > maxLength) {
+    if (isTinyMobile && city.length > maxLength - 2) {
       // Try to find a space to break at
       const spaceIndex = city.indexOf(" ", Math.floor(maxLength / 2))
-      if (spaceIndex > 0 && spaceIndex <= maxLength) {
+      if (spaceIndex > 0 && spaceIndex <= maxLength - 2) {
         return city.substring(0, spaceIndex) + "..."
       }
+      return city.substring(0, maxLength - 2) + "..."
+    } else if (isSmallMobile && city.length > maxLength) {
       return city.substring(0, maxLength) + "..."
-    } else if (isSmallMobile && city.length > maxLength + 2) {
-      return city.substring(0, maxLength + 2) + "..."
     }
     return city
   }
@@ -623,10 +638,13 @@ export function FlightSearchForm() {
                           <h4 className="passengers-section-title">Cabin Class</h4>
                           <div className="cabin-class-options">
                             {[
-                              { value: "economy", label: "Economy" },
-                              { value: "premium_economy", label: isTinyMobile ? "Premium" : "Premium Economy" },
+                              { value: "economy", label: isTinyMobile ? "Eco" : "Economy" },
+                              {
+                                value: "premium_economy",
+                                label: isTinyMobile ? "Premium" : isSmallMobile ? "Premium" : "Premium Economy",
+                              },
                               { value: "business", label: "Business" },
-                              { value: "first", label: "First Class" },
+                              { value: "first", label: isTinyMobile ? "First" : "First Class" },
                             ].map((cabin) => (
                               <button
                                 key={cabin.value}
@@ -957,10 +975,13 @@ export function FlightSearchForm() {
                         <h4 className="passengers-section-title">Cabin Class</h4>
                         <div className="cabin-class-options">
                           {[
-                            { value: "economy", label: "Economy" },
-                            { value: "premium_economy", label: isTinyMobile ? "Premium" : "Premium Economy" },
+                            { value: "economy", label: isTinyMobile ? "Eco" : "Economy" },
+                            {
+                              value: "premium_economy",
+                              label: isTinyMobile ? "Premium" : isSmallMobile ? "Premium" : "Premium Economy",
+                            },
                             { value: "business", label: "Business" },
-                            { value: "first", label: "First Class" },
+                            { value: "first", label: isTinyMobile ? "First" : "First Class" },
                           ].map((cabin) => (
                             <button
                               key={cabin.value}
