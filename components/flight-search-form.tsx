@@ -74,11 +74,17 @@ export function FlightSearchForm() {
 
   // Format the passengers text to ensure it fits on small screens
   const formatPassengersText = () => {
-    // For the smallest screens, show only the essential information
-    if (isTinyMobile) {
-      return `${adults} Adult${adults > 1 ? "s" : ""}`
+    // For extremely small screens, show minimal info
+    if (isExtremelySmallMobile) {
+      return `${adults}A`
     }
-    // For small screens, use very short abbreviations
+    // For the smallest screens, show minimal info
+    else if (isTinyMobile) {
+      return `${adults}A, ${
+        cabinClass === "economy" ? "E" : cabinClass === "premium_economy" ? "PE" : cabinClass === "business" ? "B" : "F"
+      }`
+    }
+    // For small screens, use short abbreviations
     else if (isSmallMobile) {
       const cabinShort =
         cabinClass === "economy"
@@ -213,13 +219,23 @@ export function FlightSearchForm() {
 
   const formatDateRange = () => {
     if (tripType === "one_way") {
+      if (isExtremelySmallMobile) {
+        return format(startDate, "d/M")
+      }
       return format(startDate, isTinyMobile ? "d MMM" : "EEE, d MMM")
     }
 
     // Make sure endDate is defined before formatting it
     if (!endDate) {
       // If endDate is undefined, just show the start date
+      if (isExtremelySmallMobile) {
+        return format(startDate, "d/M")
+      }
       return format(startDate, isTinyMobile ? "d MMM" : "EEE, d MMM")
+    }
+
+    if (isExtremelySmallMobile) {
+      return `${format(startDate, "d/M")}-${format(endDate, "d/M")}`
     }
 
     if (isTinyMobile) {
@@ -234,6 +250,9 @@ export function FlightSearchForm() {
   }
 
   const formatMultiCityDate = (date: Date) => {
+    if (isExtremelySmallMobile) {
+      return format(date, "d/M")
+    }
     return format(date, isTinyMobile ? "d MMM" : "EEE, d MMM")
   }
 
@@ -241,8 +260,12 @@ export function FlightSearchForm() {
   const truncateCity = (city: string, maxLength: number) => {
     if (!city) return ""
 
+    // For extremely small screens, be very aggressive with truncation
+    if (isExtremelySmallMobile && city.length > maxLength - 4) {
+      return city.substring(0, maxLength - 4) + "..."
+    }
     // For tiny screens, be more aggressive with truncation
-    if (isTinyMobile && city.length > maxLength - 2) {
+    else if (isTinyMobile && city.length > maxLength - 2) {
       // Try to find a space to break at
       const spaceIndex = city.indexOf(" ", Math.floor(maxLength / 2))
       if (spaceIndex > 0 && spaceIndex <= maxLength - 2) {
@@ -365,8 +388,8 @@ export function FlightSearchForm() {
   return (
     <div className="w-full max-w-5xl mx-auto px-2 sm:px-4">
       {/* Trip Type Selector */}
-      <div className="flex justify-center mb-6 overflow-x-auto">
-        <div className="trip-type-selector">
+      <div className="flex justify-center mb-4 sm:mb-6 overflow-x-hidden">
+        <div className="trip-type-selector w-full max-w-full flex justify-center">
           <button
             type="button"
             className={`trip-type-button ${tripType === "return" ? "active" : ""}`}
@@ -975,13 +998,25 @@ export function FlightSearchForm() {
                         <h4 className="passengers-section-title">Cabin Class</h4>
                         <div className="cabin-class-options">
                           {[
-                            { value: "economy", label: isTinyMobile ? "Eco" : "Economy" },
+                            {
+                              value: "economy",
+                              label: isExtremelySmallMobile ? "E" : isTinyMobile ? "Eco" : "Economy",
+                            },
                             {
                               value: "premium_economy",
-                              label: isTinyMobile ? "Premium" : isSmallMobile ? "Premium" : "Premium Economy",
+                              label: isExtremelySmallMobile
+                                ? "PE"
+                                : isTinyMobile
+                                  ? "Premium"
+                                  : isSmallMobile
+                                    ? "Premium"
+                                    : "Premium Economy",
                             },
-                            { value: "business", label: "Business" },
-                            { value: "first", label: isTinyMobile ? "First" : "First Class" },
+                            { value: "business", label: isExtremelySmallMobile ? "B" : "Business" },
+                            {
+                              value: "first",
+                              label: isExtremelySmallMobile ? "F" : isTinyMobile ? "First" : "First Class",
+                            },
                           ].map((cabin) => (
                             <button
                               key={cabin.value}
