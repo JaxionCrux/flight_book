@@ -6,7 +6,7 @@ export function Header() {
   const isMobile = useMediaQuery("(max-width: 768px)")
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-50">
+    <header className="sticky top-0 w-full bg-white shadow-sm z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo - Mobile & Desktop with adjusted spacing */}
         <Link href="/" className="flex items-center">

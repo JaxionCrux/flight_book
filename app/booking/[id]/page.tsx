@@ -38,7 +38,7 @@ export default function BookingPage({ params }: { params: { id: string } }) {
     <div className="relative min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 container mx-auto px-4 py-24">
+      <main className="flex-1 bg-gray-50 pt-20 md:pt-24">
         <h1 className="text-3xl font-bold mb-8">Complete Your Booking</h1>
 
         {loading ? (

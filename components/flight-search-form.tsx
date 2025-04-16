@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Search, ArrowLeftRight, MapPin, Calendar, User, ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react"
 import { format } from "date-fns"
@@ -32,6 +32,7 @@ export function FlightSearchForm() {
   const [cabinClass, setCabinClass] = useState("economy")
   const [isLoading, setIsLoading] = useState(false)
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   // Airport search states - Initialize all states to avoid conditional hook calls
   const [originOpen, setOriginOpen] = useState(false)
@@ -325,6 +326,7 @@ export function FlightSearchForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
+    setErrorMessage(null)
 
     try {
       const formData = new FormData()
@@ -358,33 +360,48 @@ export function FlightSearchForm() {
         formData.append("tripType", tripType)
       }
 
+      // Store only search parameters in sessionStorage (not the results)
+      const searchParams = {
+        origin: originCode,
+        destination: destinationCode,
+        departureDate: format(startDate, "yyyy-MM-dd"),
+        returnDate: tripType === "return" ? format(endDate, "yyyy-MM-dd") : undefined,
+        adults,
+        cabinClass,
+        tripType,
+        multiCityFlights:
+          tripType === "multi_city"
+            ? multiCityFlights.map((flight) => ({
+                originCode: flight.originCode,
+                destinationCode: flight.destinationCode,
+                date: format(flight.date, "yyyy-MM-dd"),
+              }))
+            : [],
+      }
+
+      // Store only the search parameters, not the results
+      sessionStorage.setItem("flightSearchParams", JSON.stringify(searchParams))
+
       const response = await searchFlightsAction(formData)
 
       if (response.success && response.data) {
-        sessionStorage.setItem("flightSearchResults", JSON.stringify(response.data))
+        // Instead of storing the entire results in sessionStorage,
+        // store only the search ID or a reference to the results
+        if (response.data.searchId) {
+          sessionStorage.setItem("flightSearchId", response.data.searchId)
+        }
+
         router.push("/search-results")
+      } else {
+        setErrorMessage(response.error || "An error occurred while searching for flights. Please try again.")
       }
     } catch (error) {
       console.error("Error searching flights:", error)
+      setErrorMessage("An unexpected error occurred. Please try again later.")
     } finally {
       setIsLoading(false)
     }
   }
-
-  // Effect to update the form when trip type changes
-  useEffect(() => {
-    if (tripType === "one_way") {
-      // For one-way trips, we don't need an end date
-      setEndDate(undefined as any)
-    } else if (tripType === "return") {
-      // If switching to return and no end date, set a default
-      if (!endDate) {
-        const defaultEndDate = new Date(startDate)
-        defaultEndDate.setDate(defaultEndDate.getDate() + 7)
-        setEndDate(defaultEndDate)
-      }
-    }
-  }, [tripType, startDate, endDate])
 
   return (
     <div className="w-full max-w-5xl mx-auto px-2 sm:px-4">
@@ -417,6 +434,13 @@ export function FlightSearchForm() {
           </button>
         </div>
       </div>
+
+      {/* Error Message Display */}
+      {errorMessage && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+          {errorMessage}
+        </div>
+      )}
 
       {/* Mobile Search Form */}
       {isMobile && (

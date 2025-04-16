@@ -13,6 +13,8 @@ import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { createBookingAction } from "@/app/actions/flight-actions"
+import type { Passenger } from "@/lib/duffel"
 
 interface BookingFormProps {
   offerId: string
@@ -24,28 +26,49 @@ export function BookingForm({ offerId, flightDetails }: BookingFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [bookingComplete, setBookingComplete] = useState(false)
   const [bookingError, setBookingError] = useState<string | null>(null)
+  const [bookingReference, setBookingReference] = useState<string | null>(null)
+  const [orderId, setOrderId] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
     setBookingError(null)
 
-    // Simulate booking process
+    const formData = new FormData(e.currentTarget)
+
     try {
-      // In a real app, this would call a server action to create the booking
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      // Create passenger object from form data
+      const passenger: Passenger = {
+        type: "adult",
+        given_name: formData.get("firstName") as string,
+        family_name: formData.get("lastName") as string,
+        email: formData.get("email") as string,
+        born_on: formData.get("dob") as string,
+        phone_number: formData.get("phone") as string,
+        gender: "m", // Default value, would be better to get from form
+        title: "mr", // Default value, would be better to get from form
+      }
 
-      // Simulate successful booking
-      setBookingComplete(true)
+      // Call the server action to create a booking
+      const response = await createBookingAction(offerId, [passenger])
 
-      // Store booking reference in session storage for confirmation page
-      sessionStorage.setItem(
-        "bookingReference",
-        "COS" +
-          Math.floor(Math.random() * 1000000)
-            .toString()
-            .padStart(6, "0"),
-      )
+      if (response.success && response.data) {
+        setBookingComplete(true)
+        setBookingReference(
+          response.data.booking_reference ||
+            "COS" +
+              Math.floor(Math.random() * 1000000)
+                .toString()
+                .padStart(6, "0"),
+        )
+        setOrderId(response.data.id)
+
+        // Store booking reference in session storage for confirmation page
+        sessionStorage.setItem("bookingReference", response.data.booking_reference || bookingReference || "")
+        sessionStorage.setItem("orderId", response.data.id || "")
+      } else {
+        setBookingError(response.error || "There was an error processing your booking. Please try again.")
+      }
     } catch (error) {
       console.error("Booking error:", error)
       setBookingError("There was an error processing your booking. Please try again.")
@@ -70,6 +93,9 @@ export function BookingForm({ offerId, flightDetails }: BookingFormProps) {
             <p className="text-white/70">
               Your flight has been booked successfully. A confirmation email has been sent to your email address.
             </p>
+            <div className="bg-white/10 rounded-lg p-4 inline-block mt-4">
+              <span className="text-xl font-mono font-bold">{bookingReference}</span>
+            </div>
             <Button
               onClick={handleViewConfirmation}
               className="mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
@@ -104,14 +130,26 @@ export function BookingForm({ offerId, flightDetails }: BookingFormProps) {
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
                     <div className="relative">
-                      <Input id="firstName" placeholder="John" required className="pl-10 bg-white/10 border-white/20" />
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        placeholder="John"
+                        required
+                        className="pl-10 bg-white/10 border-white/20"
+                      />
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Last Name</Label>
                     <div className="relative">
-                      <Input id="lastName" placeholder="Doe" required className="pl-10 bg-white/10 border-white/20" />
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        placeholder="Doe"
+                        required
+                        className="pl-10 bg-white/10 border-white/20"
+                      />
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
                     </div>
                   </div>
@@ -122,6 +160,7 @@ export function BookingForm({ offerId, flightDetails }: BookingFormProps) {
                   <div className="relative">
                     <Input
                       id="email"
+                      name="email"
                       type="email"
                       placeholder="john.doe@example.com"
                       required
@@ -136,6 +175,7 @@ export function BookingForm({ offerId, flightDetails }: BookingFormProps) {
                   <div className="relative">
                     <Input
                       id="phone"
+                      name="phone"
                       type="tel"
                       placeholder="+1 (555) 123-4567"
                       required
@@ -149,14 +189,14 @@ export function BookingForm({ offerId, flightDetails }: BookingFormProps) {
                   <div className="space-y-2">
                     <Label htmlFor="dob">Date of Birth</Label>
                     <div className="relative">
-                      <Input id="dob" type="date" required className="pl-10 bg-white/10 border-white/20" />
+                      <Input id="dob" name="dob" type="date" required className="pl-10 bg-white/10 border-white/20" />
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="nationality">Nationality</Label>
                     <div className="relative">
-                      <Select>
+                      <Select name="nationality">
                         <SelectTrigger className="pl-10 bg-white/10 border-white/20">
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
@@ -194,6 +234,7 @@ export function BookingForm({ offerId, flightDetails }: BookingFormProps) {
                     <div className="relative">
                       <Input
                         id="cardNumber"
+                        name="cardNumber"
                         placeholder="4111 1111 1111 1111"
                         required
                         className="pl-10 bg-white/10 border-white/20"
@@ -205,17 +246,29 @@ export function BookingForm({ offerId, flightDetails }: BookingFormProps) {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="expiry">Expiry Date</Label>
-                      <Input id="expiry" placeholder="MM/YY" required className="bg-white/10 border-white/20" />
+                      <Input
+                        id="expiry"
+                        name="expiry"
+                        placeholder="MM/YY"
+                        required
+                        className="bg-white/10 border-white/20"
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="cvc">CVC</Label>
-                      <Input id="cvc" placeholder="123" required className="bg-white/10 border-white/20" />
+                      <Input id="cvc" name="cvc" placeholder="123" required className="bg-white/10 border-white/20" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="nameOnCard">Name on Card</Label>
-                    <Input id="nameOnCard" placeholder="John Doe" required className="bg-white/10 border-white/20" />
+                    <Input
+                      id="nameOnCard"
+                      name="nameOnCard"
+                      placeholder="John Doe"
+                      required
+                      className="bg-white/10 border-white/20"
+                    />
                   </div>
                 </TabsContent>
 

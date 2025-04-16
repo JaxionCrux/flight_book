@@ -37,7 +37,7 @@ export function SearchSummary() {
   }
 
   return (
-    <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+    <div className="bg-white border-b border-gray-200 shadow-sm sticky top-20 md:top-24 z-40">
       <div className="container mx-auto px-4 py-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Route and dates */}

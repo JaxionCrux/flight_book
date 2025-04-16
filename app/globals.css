@@ -131,8 +131,6 @@ body {
 }
 
 /* Update the trip type selector styling for better responsiveness */
-/* Find the trip-type-selector and trip-type-button classes and replace with: */
-
 /* Trip type selector styling */
 .trip-type-selector {
   background-color: rgba(99, 102, 241, 0.15);
@@ -1563,5 +1561,57 @@ body {
   .multi-city-add-flight-button {
     padding: 6px 8px;
     font-size: 0.7rem;
+  }
+}
+
+/*
+Add
+  these
+  styles
+  to
+  ensure
+  proper
+  spacing
+  across
+  all
+  pages
+  with
+  fixed
+  headers 
+*/
+/* Add these styles at the end of the file */
+
+/* Fixed header spacing adjustments */
+.fixed-header-spacing {
+  padding-top: 80px; /* Default for mobile */
+}
+
+@media (min-width: 768px) {
+  .fixed-header-spacing {
+    padding-top: 96px; /* Larger spacing for desktop */
+  }
+}
+
+/* Ensure proper z-index layering */
+.z-header {
+  z-index: 50;
+}
+
+.z-search-summary {
+  z-index: 40;
+}
+
+.z-content {
+  z-index: 30;
+}
+
+/* Ensure content doesn't get cut off at the bottom */
+.min-content-height {
+  min-height: calc(100vh - 80px);
+}
+
+@media (min-width: 768px) {
+  .min-content-height {
+    min-height: calc(100vh - 96px);
   }
 }
