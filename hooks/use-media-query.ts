@@ -6,15 +6,14 @@ export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(false)
 
   useEffect(() => {
-    if (!query) return undefined
+    if (typeof window === "undefined" || !query) return undefined
 
+    // Set initial value based on the current window size
     const mediaQuery = window.matchMedia(query)
-    const handler = () => setMatches(mediaQuery.matches)
-
-    // Set initial value
     setMatches(mediaQuery.matches)
 
-    // Add listener for changes
+    // Add listener for changes with proper cleanup
+    const handler = (event: MediaQueryListEvent) => setMatches(event.matches)
     mediaQuery.addEventListener("change", handler)
 
     // Clean up

@@ -20,6 +20,7 @@ export function FlightSearchForm() {
   const isSmallMobile = useMediaQuery("(max-width: 375px)")
   const isTinyMobile = useMediaQuery("(max-width: 320px)")
   const isExtremelySmallMobile = useMediaQuery("(max-width: 280px)")
+  const isUltraSmallMobile = useMediaQuery("(max-width: 240px)") // Add this new breakpoint
   const [tripType, setTripType] = useState("return")
   const [originCity, setOriginCity] = useState("Orlando")
   const [originCode, setOriginCode] = useState("MCO")
@@ -31,6 +32,26 @@ export function FlightSearchForm() {
   const [cabinClass, setCabinClass] = useState("economy")
   const [isLoading, setIsLoading] = useState(false)
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
+
+  // Airport search states - Initialize all states to avoid conditional hook calls
+  const [originOpen, setOriginOpen] = useState(false)
+  const [destOpen, setDestOpen] = useState(false)
+  const [originQuery, setOriginQuery] = useState("")
+  const [destQuery, setDestQuery] = useState("")
+  const [originResults, setOriginResults] = useState<any[]>([])
+  const [destResults, setDestResults] = useState<any[]>([])
+
+  // Multi-city airport search states
+  const [multiCityAirportOpen, setMultiCityAirportOpen] = useState<{ [key: string]: boolean }>({})
+  const [multiCityAirportQuery, setMultiCityAirportQuery] = useState<{ [key: string]: string }>({})
+  const [multiCityAirportResults, setMultiCityAirportResults] = useState<{ [key: string]: any[] }>({})
+
+  // Date picker state
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
+  const [multiCityDatePickerOpen, setMultiCityDatePickerOpen] = useState<{ [key: string]: boolean }>({})
+
+  // Passengers state
+  const [passengersOpen, setPassengersOpen] = useState(false)
 
   // Multi-city state
   const [multiCityFlights, setMultiCityFlights] = useState([
@@ -51,26 +72,6 @@ export function FlightSearchForm() {
       date: new Date(2025, 4, 5),
     },
   ])
-
-  // Airport search states
-  const [originOpen, setOriginOpen] = useState(false)
-  const [destOpen, setDestOpen] = useState(false)
-  const [originQuery, setOriginQuery] = useState("")
-  const [destQuery, setDestQuery] = useState("")
-  const [originResults, setOriginResults] = useState<any[]>([])
-  const [destResults, setDestResults] = useState<any[]>([])
-
-  // Multi-city airport search states
-  const [multiCityAirportOpen, setMultiCityAirportOpen] = useState<{ [key: string]: boolean }>({})
-  const [multiCityAirportQuery, setMultiCityAirportQuery] = useState<{ [key: string]: string }>({})
-  const [multiCityAirportResults, setMultiCityAirportResults] = useState<{ [key: string]: any[] }>({})
-
-  // Date picker state
-  const [datePickerOpen, setDatePickerOpen] = useState(false)
-  const [multiCityDatePickerOpen, setMultiCityDatePickerOpen] = useState<{ [key: string]: boolean }>({})
-
-  // Passengers state
-  const [passengersOpen, setPassengersOpen] = useState(false)
 
   // Format the passengers text to ensure it fits on small screens
   const formatPassengersText = () => {
@@ -387,29 +388,32 @@ export function FlightSearchForm() {
 
   return (
     <div className="w-full max-w-5xl mx-auto px-2 sm:px-4">
-      {/* Trip Type Selector */}
-      <div className="flex justify-center mb-4 sm:mb-6 overflow-x-hidden">
-        <div className="trip-type-selector w-full max-w-full flex justify-center">
+      {/* Trip Type Selector - Improved Responsive Design */}
+      <div className="flex justify-center mb-4 sm:mb-6 overflow-hidden">
+        <div className="trip-type-selector">
           <button
             type="button"
             className={`trip-type-button ${tripType === "return" ? "active" : ""}`}
             onClick={() => setTripType("return")}
+            aria-pressed={tripType === "return"}
           >
-            Return
+            {isExtremelySmallMobile ? "Return" : "Return"}
           </button>
           <button
             type="button"
             className={`trip-type-button ${tripType === "one_way" ? "active" : ""}`}
             onClick={() => setTripType("one_way")}
+            aria-pressed={tripType === "one_way"}
           >
-            One way
+            {isExtremelySmallMobile ? "1-Way" : isTinyMobile ? "One way" : "One way"}
           </button>
           <button
             type="button"
             className={`trip-type-button ${tripType === "multi_city" ? "active" : ""}`}
             onClick={() => setTripType("multi_city")}
+            aria-pressed={tripType === "multi_city"}
           >
-            Multi-city
+            {isExtremelySmallMobile ? "Multi" : isTinyMobile ? "Multi" : "Multi-city"}
           </button>
         </div>
       </div>
