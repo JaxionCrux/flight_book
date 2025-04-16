@@ -43,83 +43,18 @@ export function FlightSearchResults({ isLoading = false }: { isLoading?: boolean
     setLoading(isLoading)
 
     // Get search results from window object (set by the parent component)
-    // This avoids the sessionStorage quota issue
     if (window._flightSearchResultsData) {
       setSearchResults(window._flightSearchResultsData)
       setLoading(false)
     } else {
-      // Fallback to a simpler approach if needed
+      // If no results are available, set loading to false but don't create mock data
       const timer = setTimeout(() => {
-        // Try to get minimal data from sessionStorage
-        const params = sessionStorage.getItem("flightSearchParams")
-        if (params) {
-          try {
-            // Create minimal mock results if needed
-            const mockResults = createMockResults(JSON.parse(params))
-            setSearchResults(mockResults)
-          } catch (error) {
-            console.error("Error creating mock results:", error)
-            // Provide a minimal fallback structure
-            setSearchResults({
-              offers: [],
-            })
-          }
-        }
         setLoading(false)
       }, 1500)
 
       return () => clearTimeout(timer)
     }
   }, [isLoading])
-
-  // Helper function to create minimal mock results if needed
-  const createMockResults = (params: any) => {
-    // Create a minimal set of mock results based on search parameters
-    const currentDate = new Date()
-    const arrivalDate = new Date(currentDate.getTime() + 3.5 * 60 * 60 * 1000)
-
-    return {
-      offers: [
-        {
-          id: "offer1",
-          total_amount: "499.99",
-          total_currency: "USD",
-          base_amount: "399.99",
-          base_currency: "USD",
-          tax_amount: "100.00",
-          tax_currency: "USD",
-          slices: [
-            {
-              id: "slice1",
-              origin: { iata_code: params.origin || "JFK" },
-              destination: { iata_code: params.destination || "LAX" },
-              duration: "PT3H30M",
-              segments: [
-                {
-                  id: "segment1",
-                  departing_at: currentDate.toISOString(),
-                  arriving_at: arrivalDate.toISOString(),
-                  origin: { iata_code: params.origin || "JFK" },
-                  destination: { iata_code: params.destination || "LAX" },
-                  duration: "PT3H30M",
-                  operating_carrier: {
-                    name: "Sample Airline",
-                    iata_code: "SA",
-                    operating_carrier_flight_number: "123",
-                  },
-                },
-              ],
-            },
-          ],
-          owner: {
-            name: "Sample Airline",
-            iata_code: "SA",
-            logo_symbol_url: null,
-          },
-        },
-      ],
-    }
-  }
 
   const handleSelectFlight = (offerId: string) => {
     router.push(`/flight-details/${offerId}`)

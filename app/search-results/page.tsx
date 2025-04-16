@@ -60,8 +60,10 @@ export default function SearchResultsPage() {
 
           if (response.success && response.data) {
             setSearchResults(response.data)
+            // Make results available to the FlightSearchResults component
+            window._flightSearchResultsData = response.data
           } else {
-            setError(response.error || "Failed to fetch flight results")
+            setError(response.error || "Failed to fetch flight results. Please try searching again.")
           }
         } else {
           setError("No search parameters found. Please try searching again.")
