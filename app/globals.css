@@ -1615,3 +1615,54 @@ Add
     min-height: calc(100vh - 96px);
   }
 }
+
+/* Airport Search Styles */
+.airport-suggestion {
+  transition: background-color 0.15s ease;
+}
+
+.airport-suggestion:hover {
+  background-color: rgba(124, 58, 237, 0.05);
+}
+
+.airport-suggestion-focused {
+  background-color: rgba(124, 58, 237, 0.1);
+}
+
+.airport-highlight {
+  background-color: rgba(124, 58, 237, 0.2);
+  color: rgb(91, 33, 182);
+  font-weight: 500;
+}
+
+.airport-dropdown {
+  animation: fadeIn 0.2s ease-out;
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.3) transparent;
+}
+
+.airport-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.airport-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.airport-dropdown::-webkit-scrollbar-thumb {
+  background-color: rgba(124, 58, 237, 0.3);
+  border-radius: 3px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

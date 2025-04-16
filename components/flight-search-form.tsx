@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Search, ArrowLeftRight, MapPin, Calendar, User, ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react"
+import { Search, ArrowLeftRight, MapPin, Calendar, User, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import { format } from "date-fns"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { searchAirports } from "@/app/actions/airport-actions"
 import { searchFlightsAction } from "@/app/actions/flight-actions"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { AirportSearch } from './airport-search'
 
 export function FlightSearchForm() {
   const router = useRouter()
@@ -72,7 +73,7 @@ export function FlightSearchForm() {
       destinationCode: "JFK",
       date: new Date(2025, 4, 5),
     },
-  ])
+  ]);
 
   // Format the passengers text to ensure it fits on small screens
   const formatPassengersText = () => {

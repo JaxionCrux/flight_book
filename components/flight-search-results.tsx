@@ -17,10 +17,10 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { SearchLoadingAnimation } from "@/components/search-loading-animation"
 import type { FlightOffer } from "@/lib/duffel"
 
 // Add this at the top of the file, after the imports
@@ -30,31 +30,36 @@ declare global {
   }
 }
 
-// Update the component props to accept isLoading
-export function FlightSearchResults({ isLoading = false }: { isLoading?: boolean }) {
+interface FlightSearchResultsProps {
+  isLoading?: boolean
+  searchResults?: any
+  searchCompleted?: boolean
+}
+
+export function FlightSearchResults({
+  isLoading = false,
+  searchResults: initialResults = null,
+  searchCompleted = false,
+}: FlightSearchResultsProps) {
   const router = useRouter()
-  const [searchResults, setSearchResults] = useState<any>(null)
+  const [searchResults, setSearchResults] = useState<any>(initialResults)
   const [loading, setLoading] = useState(isLoading)
   const [expandedFlights, setExpandedFlights] = useState<{ [key: string]: boolean }>({})
   const [activeTab, setActiveTab] = useState("best")
 
   useEffect(() => {
-    // Set loading state based on prop
+    // Update loading state based on props
     setLoading(isLoading)
 
-    // Get search results from window object (set by the parent component)
-    if (window._flightSearchResultsData) {
-      setSearchResults(window._flightSearchResultsData)
-      setLoading(false)
-    } else {
-      // If no results are available, set loading to false but don't create mock data
-      const timer = setTimeout(() => {
-        setLoading(false)
-      }, 1500)
-
-      return () => clearTimeout(timer)
+    // If we have initial results from props, use those
+    if (initialResults) {
+      setSearchResults(initialResults)
     }
-  }, [isLoading])
+    // Otherwise, try to get results from window object
+    else if (window._flightSearchResultsData) {
+      setSearchResults(window._flightSearchResultsData)
+    }
+  }, [isLoading, initialResults])
 
   const handleSelectFlight = (offerId: string) => {
     router.push(`/flight-details/${offerId}`)
@@ -101,52 +106,13 @@ export function FlightSearchResults({ isLoading = false }: { isLoading?: boolean
     }
   }
 
-  if (loading) {
-    return (
-      <div>
-        <div className="flex justify-between items-center mb-6">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-
-        <div className="mb-6">
-          <Skeleton className="h-12 w-full mb-4" />
-        </div>
-
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="mb-4 overflow-hidden">
-            <CardContent className="p-0">
-              <div className="p-4 border-b border-gray-100">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <Skeleton className="h-12 w-12 rounded-full" />
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-40" />
-                      <Skeleton className="h-4 w-24" />
-                    </div>
-                  </div>
-                  <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-4 w-4 rounded-full" />
-                    <Skeleton className="h-4 w-32" />
-                  </div>
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-8 w-28" />
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 bg-gray-50">
-                <Skeleton className="h-20 w-full" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    )
+  // Show loading animation while search is in progress
+  if (loading || !searchCompleted) {
+    return <SearchLoadingAnimation />
   }
 
-  if (!searchResults || !searchResults.offers || searchResults.offers.length === 0) {
+  // Only show "no flights found" if search is completed and we have no results
+  if (searchCompleted && (!searchResults || !searchResults.offers || searchResults.offers.length === 0)) {
     return (
       <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-100">
         <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -169,7 +135,7 @@ export function FlightSearchResults({ isLoading = false }: { isLoading?: boolean
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold">{searchResults.offers.length} flights found</h2>
+        <h2 className="text-xl font-bold">{searchResults?.offers?.length || 0} flights found</h2>
         <Button
           variant="outline"
           onClick={() => router.push("/")}
@@ -208,7 +174,7 @@ export function FlightSearchResults({ isLoading = false }: { isLoading?: boolean
         </TabsList>
       </Tabs>
 
-      {searchResults.offers.map((offer: FlightOffer) => {
+      {searchResults?.offers?.map((offer: FlightOffer) => {
         // Safety check for required properties
         if (!offer || !offer.slices || !offer.slices[0] || !offer.slices[0].segments || !offer.slices[0].segments[0]) {
           return null // Skip rendering this offer if it's missing critical data

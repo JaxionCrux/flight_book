@@ -13,12 +13,15 @@ export default function SearchResultsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchResults, setSearchResults] = useState(null)
   const [error, setError] = useState<string | null>(null)
+  const [searchCompleted, setSearchCompleted] = useState(false)
   const searchParams = useSearchParams()
 
   useEffect(() => {
     async function fetchResults() {
       try {
         setIsLoading(true)
+        setSearchCompleted(false)
+        setError(null)
 
         // First try to get results from sessionStorage
         const storedParams = sessionStorage.getItem("flightSearchParams")
@@ -72,21 +75,14 @@ export default function SearchResultsPage() {
         console.error("Error fetching search results:", err)
         setError("An unexpected error occurred. Please try searching again.")
       } finally {
+        // Mark search as completed regardless of outcome
+        setSearchCompleted(true)
         setIsLoading(false)
       }
     }
 
     fetchResults()
   }, [])
-
-  // Store results in component state for FlightSearchResults to use
-  useEffect(() => {
-    if (searchResults) {
-      // Make results available to the FlightSearchResults component
-      // without using sessionStorage for the full results
-      window._flightSearchResultsData = searchResults
-    }
-  }, [searchResults])
 
   return (
     <div className="relative min-h-screen flex flex-col">
@@ -106,10 +102,14 @@ export default function SearchResultsPage() {
 
             {/* Results */}
             <div className="flex-1">
-              {error ? (
+              {error && searchCompleted ? (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">{error}</div>
               ) : (
-                <FlightSearchResults isLoading={isLoading} />
+                <FlightSearchResults
+                  isLoading={isLoading}
+                  searchResults={searchResults}
+                  searchCompleted={searchCompleted}
+                />
               )}
             </div>
           </div>
